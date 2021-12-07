@@ -1,2 +1,1 @@
-matej=100;
-andrea=200;
+matej = 3476

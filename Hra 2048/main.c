@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <conio.h>
+#include <string.h>
 
 #define hore 72
 #define dole 80
@@ -475,13 +476,14 @@ int nova_hra()
 			}
 			//koniec hry
 			else
-			{
-				//uloz skore do statistik
-				char retazec[2048];
-				FILE* subor_statistiky_citaj = fopen("statistiky.txt","r");
-				fscanf_s(subor_statistiky_citaj, "%s", &retazec, 2048);
-				fclose(subor_statistiky_citaj);
-				
+			{	
+				//zapis do suboru
+				FILE* subor_statistiky_pis = fopen("statistiky.txt", "a+");
+				char riadok[100];
+				sprintf(riadok,"%s = %d\n", meno, skore);
+				fputs(riadok, subor_statistiky_pis);
+				fclose(subor_statistiky_pis);
+
 				//vypis prehra a vrat do menu
 				system("cls");
 				farba_reset();
@@ -515,13 +517,13 @@ void statistiky()
 	FILE* subor_statistiky_citanie = fopen("statistiky.txt","r");
 
 	//pokym nie si nakonci suboru, vykonaj nasledovne
-	char riadok[1024];
+	char riadok[1024] = {'\0'};
 	int n1 = 0; int n2 = 0;
 	char hrac[50]; char body[50];
 	while (fgets(riadok, sizeof(riadok), subor_statistiky_citanie) != NULL)
 	{
 		n1 = 0; n2 = 0;
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < strlen(riadok); i++)
 		{
 			if ((riadok[i] >= 'A') && (riadok[i] <= 'z'))
 			{
@@ -535,7 +537,7 @@ void statistiky()
 			}
 		}
 		hrac[n1] = '\0'; body[n2] = '\0';
-		printf("%s : %s\n", hrac, body);
+		printf("%s : %*s\n", hrac, strlen(body), body);
 	}
 	//zavri subor
 	fclose(subor_statistiky_citanie);
