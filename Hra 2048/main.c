@@ -15,6 +15,8 @@
 
 int vyber = 0;
 int skore = 0;
+int suborjeVelky = 0;
+int pocet_riadkov = 0;
 
 //vyrob pole
 int pole[4][4] =
@@ -254,47 +256,11 @@ int pohyb(int pole[4][4], int vstup, int pole_plnosti[4][4])
 }
 
 //hra
-int nova_hra()
+int hra(int stav)
 {
-	skore = 0;
-	system("cls");
-	printf("Zadaj svoje meno: ");
+	int vstup = 0;
 	char meno[10];
-	scanf_s("%s", meno, 10);
-
-	farba_tyrkysova();
-	printf("Vitaj %s!", meno);
-	farba_reset();
-	Sleep(1000);
-
-	int vstup = 0; //!!!
-	skore = 0;
-
-	//vyrob pole
-	int pole[4][4] =
-	{
-		{0,0,0,0},
-		{0,0,0,0},
-		{0,0,0,0},
-		{0,0,0,0}
-	};
-
-	//daj 2 dvojky na nahodne miesta pola + zabran aby sa dvojky vygenerovali na seba
-	srand(time(NULL));
-	int nahodne_cisla[4] = { rand() % 4, rand() % 4 , rand() % 4 , rand() % 4 };
-	while ((nahodne_cisla[0] == nahodne_cisla[2]) && (nahodne_cisla[1] == nahodne_cisla[3]))
-	{
-		if ((nahodne_cisla[3] < 4) && (nahodne_cisla[3] > 0))
-		{
-			nahodne_cisla[3] = nahodne_cisla[3] - 1;
-		}
-		else
-		{
-			nahodne_cisla[3] = nahodne_cisla[3] + 1;
-		}
-	}
-	pole[nahodne_cisla[0]][nahodne_cisla[1]] = 2;
-	pole[nahodne_cisla[2]][nahodne_cisla[3]] = 2;
+	int plnost = 0;
 
 	int pole_plnosti[4][4] =
 	{
@@ -303,8 +269,87 @@ int nova_hra()
 		{0,0,0,0},
 		{0,0,0,0}
 	};
-	int plnost = 0;
-	
+
+	int pole[4][4] =
+	{
+		{0,0,0,0},
+		{0,0,0,0},
+		{0,0,0,0},
+		{0,0,0,0}
+	};
+
+	//ak sa zahajila nova hra
+	if (stav == 0)
+	{
+		skore = 0;
+		system("cls");
+		printf("Zadaj svoje meno: ");
+		scanf_s("%s", meno, 10);
+
+		farba_tyrkysova();
+		printf("Vitaj %s!", meno);
+		farba_reset();
+		Sleep(1000);
+		skore = 0;
+
+		//daj 2 dvojky na nahodne miesta pola + zabran aby sa dvojky vygenerovali na seba
+		srand(time(NULL));
+		int nahodne_cisla[4] = { rand() % 4, rand() % 4 , rand() % 4 , rand() % 4 };
+		while ((nahodne_cisla[0] == nahodne_cisla[2]) && (nahodne_cisla[1] == nahodne_cisla[3]))
+		{
+			if ((nahodne_cisla[3] < 4) && (nahodne_cisla[3] > 0))
+			{
+				nahodne_cisla[3] = nahodne_cisla[3] - 1;
+			}
+			else
+			{
+				nahodne_cisla[3] = nahodne_cisla[3] + 1;
+			}
+		}
+		pole[nahodne_cisla[0]][nahodne_cisla[1]] = 2;
+		pole[nahodne_cisla[2]][nahodne_cisla[3]] = 2;
+
+		plnost = 0;
+	}
+
+	//ak sa nacita hra
+	else
+	{
+		FILE* subor_stav = fopen("stav.txt", "r");
+		for (int t = 0; t < 4; t++)
+		{
+			for (int u = 0; u < 4; u++)
+			{
+				fscanf(subor_stav, "%d", &pole[t][u]);
+			}
+		}
+		fscanf(subor_stav, "%s", meno);
+		fscanf(subor_stav, "%d", &skore);
+		fclose(subor_stav);
+
+		int pole_plnosti[4][4] =
+		{
+			{0,0,0,0},
+			{0,0,0,0},
+			{0,0,0,0},
+			{0,0,0,0}
+		};
+
+		plnost = 0;
+		for (int t = 0; t < 4; t++)
+		{
+			for (int u = 0; u < 4; u++)
+			{
+				if (pole[t][u] != 0)
+				{
+					pole_plnosti[t][u] = 1;
+					plnost++;
+				}
+			}
+		}
+
+	}
+
 	//slucka hry
 	int hra_bezi = 1;
 	
@@ -484,6 +529,26 @@ int nova_hra()
 				fputs(riadok, subor_statistiky_pis);
 				fclose(subor_statistiky_pis);
 
+				//zjisti kolik je v souboru radku
+				FILE* subor_statistiky_citaj = fopen("statistiky.txt", "r");
+				pocet_riadkov = 0;
+				while (fgets(riadok, sizeof(riadok), subor_statistiky_citaj) != NULL)
+				{
+					pocet_riadkov++;
+				}
+				fclose(subor_statistiky_citaj);
+
+				//pokud je radku mene nez 10, neudelej nic, jinak informuj ze prshaujes limit
+				if (pocet_riadkov > 10)
+				{
+					suborjeVelky = 1;
+					char suborjeVelky1[2];
+					sprintf(suborjeVelky1, "%d", suborjeVelky);
+					FILE* subor_velkost_statistik_zapis = fopen("velkost_statistik.txt", "w");
+					fputs(suborjeVelky1, subor_velkost_statistik_zapis);
+					fclose(subor_velkost_statistik_zapis);
+				}
+
 				//vypis prehra a vrat do menu
 				system("cls");
 				farba_reset();
@@ -497,6 +562,17 @@ int nova_hra()
 		}
 	}
 	//ak stlacis escape, chod spat do menu
+	FILE* subor_stav = fopen("stav.txt", "w");
+	for (int t = 0; t < 4; t++)
+	{
+		for (int u = 0; u < 4; u++)
+		{
+			fprintf(subor_stav, "%d\n", pole[t][u]);
+		}
+	}
+	fprintf(subor_stav, "%s\n", meno);
+	fprintf(subor_stav, "%d", skore);
+	fclose(subor_stav);
 	main();
 	return 0;
 }
@@ -504,6 +580,14 @@ int nova_hra()
 //statistiky
 void statistiky()
 {
+
+	//precitaj aka je velkost statistik
+	char suborjeVelky1[2];
+	FILE* subor_velkost_statistik = fopen("velkost_statistik.txt", "r");
+	fgets(suborjeVelky1, sizeof(suborjeVelky1),subor_velkost_statistik);
+	fclose(subor_velkost_statistik);
+	suborjeVelky = atoi(suborjeVelky1);
+
 	int vstup = 0;
 	farba_reset();
 	system("cls");
@@ -517,28 +601,63 @@ void statistiky()
 	FILE* subor_statistiky_citanie = fopen("statistiky.txt","r");
 
 	//pokym nie si nakonci suboru, vykonaj nasledovne
+
 	char riadok[1024] = {'\0'};
 	int n1 = 0; int n2 = 0;
 	char hrac[50]; char body[50];
-	while (fgets(riadok, sizeof(riadok), subor_statistiky_citanie) != NULL)
+
+	//ak je menej ako 10 riadov
+	if (suborjeVelky == 0)
 	{
-		n1 = 0; n2 = 0;
-		for (int i = 0; i < strlen(riadok); i++)
+		while (fgets(riadok, sizeof(riadok), subor_statistiky_citanie) != NULL)
 		{
-			if ((riadok[i] >= 'A') && (riadok[i] <= 'z'))
+			n1 = 0; n2 = 0;
+			for (int i = 0; i < strlen(riadok); i++)
 			{
-				hrac[n1] = riadok[i];
-				n1++;
+				if ((riadok[i] >= 'A') && (riadok[i] <= 'z'))
+				{
+					hrac[n1] = riadok[i];
+					n1++;
+				}
+				else if ((riadok[i] >= '0') && (riadok[i] <= '9'))
+				{
+					body[n2] = riadok[i];
+					n2++;
+				}
 			}
-			else if ((riadok[i] >= '0') && (riadok[i] <= '9'))
-			{
-				body[n2] = riadok[i];
-				n2++;
-			}
+			hrac[n1] = '\0'; body[n2] = '\0';
+			printf("%s : %*s\n", hrac, strlen(body), body);
 		}
-		hrac[n1] = '\0'; body[n2] = '\0';
-		printf("%s : %*s\n", hrac, strlen(body), body);
 	}
+	else
+	{
+		int cisloRiadku = 0;
+		int pocitajodTohto = pocet_riadkov - 10;
+		while (fgets(riadok, sizeof(riadok), subor_statistiky_citanie) != NULL)
+		{
+			if (cisloRiadku >= pocitajodTohto)
+			{
+				n1 = 0; n2 = 0;
+				for (int i = 0; i < strlen(riadok); i++)
+				{
+					if ((riadok[i] >= 'A') && (riadok[i] <= 'z'))
+					{
+						hrac[n1] = riadok[i];
+						n1++;
+					}
+					else if ((riadok[i] >= '0') && (riadok[i] <= '9'))
+					{
+						body[n2] = riadok[i];
+						n2++;
+					}
+				}
+				hrac[n1] = '\0'; body[n2] = '\0';
+				printf("%s : %*s\n", hrac, strlen(body), body);
+			}
+			cisloRiadku++;
+		}
+	}
+
 	//zavri subor
 	fclose(subor_statistiky_citanie);
 
@@ -591,14 +710,25 @@ int main()
 		}
 	}
 	//sprav to co uzivatel zvolil
+	FILE* x;
 	switch (vyber)
 	{
 	case 0:
-		nova_hra();
+		hra(0);
 		break;
 
 	case 1:
-		printf("Pokracovat");
+		x = fopen("stav.txt","r");
+		if (x)
+		{
+			fclose(x);
+			hra(1);
+		}
+		else
+		{
+			hra(0);
+		}
+
 		break;
 
 	case 2:
